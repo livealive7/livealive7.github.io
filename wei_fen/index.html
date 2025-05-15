@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>外邦來朝計算器</title>
+  <style>
+    .numberInput {
+      margin: 5px 0;
+    }
+    #result { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>外邦來朝計算器</h2>
+
+  <label for="combo">選擇一個選項：</label>
+  <select id="combo">
+    <option value="1080">甲</option>
+    <option value="360">乙</option>
+    <option value="120">丙</option>
+    <option value="40">丁</option>
+    <option value="20">戊</option>
+    <option value="10">己</option>
+  </select>
+
+  <h3>門客戰鬥力(億)</h3>
+  <div id="inputContainer">
+    <!-- 輸入框會被加在這裡 -->
+  </div>
+  <button onclick="addInput()">➕ 新增門客</button>
+  <button onclick="removeInput()">➖ 移除門客</button>
+
+  <br><br>
+  <button onclick="calculate()">計算</button>
+
+  <!-- <p id="result"></p> -->
+  <div id="result"></div>
+
+  <script>
+    function addInput() {
+      const container = document.getElementById('inputContainer');
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.className = 'numberInput';
+      input.placeholder = '請輸入門客戰鬥力';
+      container.appendChild(input);
+    }
+
+    function removeInput() {
+      const container = document.getElementById('inputContainer');
+      const inputs = container.getElementsByClassName('numberInput');
+      if (inputs.length > 0) {
+        container.removeChild(inputs[inputs.length - 1]);
+      }
+    }
+
+    function calculate() {
+      // 對應的 buff 花費表
+      const costDict = {
+        0:  0,
+        5:  20,
+        10: 60,
+        15: 120,
+        20: 200,
+        25: 300,
+        30: 420,
+        35: 560,
+        40: 720,
+        45: 900,
+        50: 1100,
+        55: 1320,
+        60: 1560,
+        65: 1820,
+        70: 2100,
+        75: 2400,
+        80: 2720,
+        85: 3060,
+        90: 3420,
+        95: 3800,
+        100: 4200
+      };
+      
+      const inputs = document.querySelectorAll('.numberInput');
+      const resultDiv = document.getElementById('result');
+      const comboValue = parseFloat(document.getElementById('combo').value);
+      resultDiv.innerText = "";
+      let sum = 0;
+      // inputs.forEach(input => {
+      //   sum += Number(input.value) || 0;  // 避免空值造成 NaN
+      // });
+      // 數值列表
+      // const numbers = [144.277, 127.965, 60.137, 49.68, 21.751, 19.717, 12.895, 11.396, 10.672, 9.549, 8.651, 8.535, 7.568, 3.979, 2.533, 1.303, 1.043];
+
+      // 初始化最佳解
+      let bestBuff = null;
+      let bestLin = null;
+      let minCost = Infinity;
+      let bestResult = null;
+
+      // 搜索最佳組合
+      for (const [buffStr, cost] of Object.entries(costDict)) {
+        const buff = parseInt(buffStr);
+        let lin = 0;
+
+        while (true) {
+          const resultTmp = attackPower(inputs, buff, lin);
+          
+          // if (lin > 2) break;
+          console.log(buff);
+          console.log(`result: ${resultTmp}`);
+          console.log(`lin: ${lin}`);
+
+          console.log(typeof(resultTmp));
+          console.log(typeof(comboValue));
+          if (resultTmp >= comboValue) {
+            const totalCost = cost + lin * 150;
+            if (totalCost < minCost) {
+              bestBuff = buff;
+              bestLin = lin;
+              minCost = totalCost;
+              bestResult = resultTmp;
+            }
+            break;
+          }
+          else {
+            if (lin == inputs.length) {
+              break;
+            }
+          }
+          lin++;
+        }        
+      }
+
+      // ✅ 修正這裡，使用 bestResult 而不是 result
+      if (bestBuff === null) {
+        resultDiv.innerText = `找不到達成傷害超過 ${comboValue} 億的組合`;
+      } else {
+        resultDiv.innerHTML = `
+          ✅ 最佳組合：<br>
+          Buff：<b>${bestBuff}%</b><br>
+          出使令：<b>${bestLin}</b><br>
+          花費：<b>${minCost} 元寶</b><br>
+          預估傷害：<b>${bestResult.toFixed(2)} 億</b>
+        `;
+      }
+      
+      // const comboValue = document.getElementById('combo').value;
+      // document.getElementById('result').innerText = 
+      //   `總和是：${sum}，你選的是：${comboValue}`;
+    }
+    
+    function attackPower(numbers, buff, lin) {
+      let sum = 0;
+      for (let i = 0; i < numbers.length; i++) {
+        const value = parseFloat(numbers[i].value);
+        let num = value * (100 + buff) / 100;
+        if (i < lin) {
+          num += num; // 加倍
+        }
+        sum += num;
+      }
+      return sum;
+    }
+    
+    // 預設加一個輸入框
+    window.onload = addInput;
+  </script>
+</body>
+</html>
